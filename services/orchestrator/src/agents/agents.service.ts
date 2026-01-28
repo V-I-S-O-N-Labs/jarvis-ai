@@ -6,6 +6,8 @@ import { PermissionChangeDto } from "./dto/permission-change.dto";
 import { UpdateAgentDto } from "./dto/update-agent.dto";
 import { LifecycleService } from "./lifecycle.service";
 
+type AgentWithScopes = Prisma.AgentGetPayload<{ include: { scopes: true } }>;
+
 @Injectable()
 export class AgentsService {
   constructor(
@@ -14,30 +16,41 @@ export class AgentsService {
   ) {}
 
   async create(input: CreateAgentDto) {
+    const scopes = Array.from(new Set(input.scopes ?? []));
     const agent = await this.prisma.agent.create({
       data: {
         name: input.name,
-        scopes: input.scopes ?? [],
+        scopes: {
+          create: scopes.map((scope) => ({ scope })),
+        },
         policy: input.policy ?? Prisma.JsonNull,
         status: AgentStatus.CREATED,
       },
+      include: { scopes: true },
     });
 
     await this.createAudit("agent_created", agent.id, { name: agent.name });
 
-    return agent;
+    return this.serializeAgent(agent);
   }
 
   async findAll() {
-    return this.prisma.agent.findMany({ orderBy: { createdAt: "desc" } });
+    const agents = await this.prisma.agent.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { scopes: true },
+    });
+    return agents.map((agent) => this.serializeAgent(agent));
   }
 
   async findOne(id: string) {
-    const agent = await this.prisma.agent.findUnique({ where: { id } });
+    const agent = await this.prisma.agent.findUnique({
+      where: { id },
+      include: { scopes: true },
+    });
     if (!agent) {
       throw new NotFoundException("Agent not found");
     }
-    return agent;
+    return this.serializeAgent(agent);
   }
 
   async update(id: string, input: UpdateAgentDto) {
@@ -46,19 +59,29 @@ export class AgentsService {
       this.lifecycle.assertTransition(agent.status, input.status as AgentStatus);
     }
 
+    const data: Prisma.AgentUpdateInput = {
+      name: input.name ?? agent.name,
+      status: (input.status as AgentStatus) ?? agent.status,
+      policy: input.policy ?? agent.policy ?? Prisma.JsonNull,
+    };
+
+    if (input.scopes) {
+      const scopes = Array.from(new Set(input.scopes));
+      data.scopes = {
+        deleteMany: {},
+        create: scopes.map((scope) => ({ scope })),
+      };
+    }
+
     const updated = await this.prisma.agent.update({
       where: { id },
-      data: {
-        name: input.name ?? agent.name,
-        status: (input.status as AgentStatus) ?? agent.status,
-        scopes: input.scopes ?? agent.scopes,
-        policy: input.policy ?? agent.policy ?? Prisma.JsonNull,
-      },
+      data,
+      include: { scopes: true },
     });
 
     await this.createAudit("agent_updated", id, { updates: input });
 
-    return updated;
+    return this.serializeAgent(updated);
   }
 
   async remove(id: string) {
@@ -78,13 +101,21 @@ export class AgentsService {
 
     const updated = await this.prisma.agent.update({
       where: { id },
-      data: { scopes: Array.from(scopeSet) },
+      data: {
+        scopes: {
+          deleteMany: {},
+          create: Array.from(scopeSet).map((scope) => ({ scope })),
+        },
+      },
+      include: { scopes: true },
     });
 
     await this.prisma.permissionGrant.create({
       data: {
         agentId: id,
-        scopes: input.scopes,
+        scopes: {
+          create: input.scopes.map((scope) => ({ scope })),
+        },
         action: "grant",
         reason: input.reason,
       },
@@ -95,7 +126,7 @@ export class AgentsService {
       reason: input.reason,
     });
 
-    return updated;
+    return this.serializeAgent(updated);
   }
 
   async revokePermissions(id: string, input: PermissionChangeDto) {
@@ -105,13 +136,21 @@ export class AgentsService {
 
     const updated = await this.prisma.agent.update({
       where: { id },
-      data: { scopes: Array.from(scopeSet) },
+      data: {
+        scopes: {
+          deleteMany: {},
+          create: Array.from(scopeSet).map((scope) => ({ scope })),
+        },
+      },
+      include: { scopes: true },
     });
 
     await this.prisma.permissionGrant.create({
       data: {
         agentId: id,
-        scopes: input.scopes,
+        scopes: {
+          create: input.scopes.map((scope) => ({ scope })),
+        },
         action: "revoke",
         reason: input.reason,
       },
@@ -122,7 +161,7 @@ export class AgentsService {
       reason: input.reason,
     });
 
-    return updated;
+    return this.serializeAgent(updated);
   }
 
   async listAuditLogs() {
@@ -137,5 +176,12 @@ export class AgentsService {
         details: details ?? Prisma.JsonNull,
       },
     });
+  }
+
+  private serializeAgent(agent: AgentWithScopes) {
+    return {
+      ...agent,
+      scopes: agent.scopes.map((scope) => scope.scope),
+    };
   }
 }

@@ -24,7 +24,6 @@ export class OrchestrationService {
         await this.prisma.agent.create({
           data: {
             name: `AutoAgent-${Date.now()}-${i}`,
-            scopes: [],
             policy: Prisma.JsonNull,
             status: AgentStatus.CREATED,
           },
