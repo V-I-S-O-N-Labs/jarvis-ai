@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentStatus {
+  CREATED
+  RUNNING
+  IDLE
+  TERMINATED
+}
+
+model Agent {
+  id        String        @id @default(uuid())
+  name      String
+  status    AgentStatus   @default(CREATED)
+  scopes    String[]
+  policy    Json?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  grants    PermissionGrant[]
+  audits    AuditLog[]
+}
+
+model PermissionGrant {
+  id        String   @id @default(uuid())
+  agentId   String
+  scopes    String[]
+  action    String
+  reason    String?
+  createdAt DateTime @default(now())
+  agent     Agent    @relation(fields: [agentId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  agentId   String?
+  details   Json?
+  createdAt DateTime @default(now())
+  agent     Agent?   @relation(fields: [agentId], references: [id])
+}

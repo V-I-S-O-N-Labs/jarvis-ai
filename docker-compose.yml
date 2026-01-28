@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
+    environment:
+      - DATABASE_URL=file:/data/dev.db
+      - PORT=4000
+    volumes:
+      - orchestrator-data:/data
+    ports:
+      - "4000:4000"
+  agent-worker:
+    build:
+      context: .
+      dockerfile: services/agent-worker/Dockerfile
+    ports:
+      - "5001:5001"
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - orchestrator
+
+volumes:
+  orchestrator-data:

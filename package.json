@@ -1,0 +1,16 @@
+{
+  "name": "jarvis-ai",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -ws",
+    "dev": "npm run dev -ws",
+    "lint": "npm run lint -ws",
+    "test": "npm run test -ws",
+    "format": "npm run format -ws"
+  }
+}
