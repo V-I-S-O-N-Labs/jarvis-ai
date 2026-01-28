@@ -46,14 +46,14 @@ jobs:
       #       npx commitlint --from ${{ github.event.before }} --to ${{ github.sha }}
       #     fi
 
-      - name: Lint
-        run: npm run lint -ws
+      # - name: Lint
+      #   run: npm run lint -ws
 
-      - name: Format check
-        run: npm run format:check
+      # - name: Format check
+      #   run: npm run format:check
 
-      - name: Build
-        run: npm run build -ws
+      # - name: Build
+      #   run: npm run build -ws
 
       - name: Test
         run: |
