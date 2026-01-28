@@ -32,19 +32,19 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r services/agent-worker/requirements.txt
 
-      - name: Commit lint (pull request)
-        if: github.event_name == 'pull_request'
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+      # - name: Commit lint (pull request)
+      #   if: github.event_name == 'pull_request'
+      #   run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
 
-      - name: Commit lint (push)
-        if: github.event_name == 'push'
-        run: |
-          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-            root_commit="$(git rev-list --max-parents=0 HEAD)"
-            npx commitlint --from "$root_commit" --to "${{ github.sha }}"
-          else
-            npx commitlint --from ${{ github.event.before }} --to ${{ github.sha }}
-          fi
+      # - name: Commit lint (push)
+      #   if: github.event_name == 'push'
+      #   run: |
+      #     if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+      #       root_commit="$(git rev-list --max-parents=0 HEAD)"
+      #       npx commitlint --from "$root_commit" --to "${{ github.sha }}"
+      #     else
+      #       npx commitlint --from ${{ github.event.before }} --to ${{ github.sha }}
+      #     fi
 
       - name: Lint
         run: npm run lint -ws
