@@ -6,19 +6,19 @@ This repo contains a Jarvis-like agent orchestration control plane with a TypeSc
 
 ```mermaid
 flowchart LR
-  subgraph UI[React Mission Control]
+  subgraph UI["React Mission Control"]
     Agents[Agents + Permissions]
     Audit[Audit Logs]
   end
 
-  subgraph CP[Orchestrator API (NestJS)]
+  subgraph CP["Orchestrator API (NestJS)"]
     AgentsAPI[Agents CRUD]
     Permissions[Grant / Revoke]
     Policy[Policy + Lifecycle]
     AuditAPI[Audit Logs]
   end
 
-  subgraph EP[Agent Worker (FastAPI)]
+  subgraph EP["Agent Worker (FastAPI)"]
     Heartbeat[Heartbeat]
     Jobs[Job Execution + Permission Enforcement]
   end
