@@ -11,6 +11,20 @@
     "dev": "npm run dev -ws",
     "lint": "npm run lint -ws",
     "test": "npm run test -ws",
-    "format": "npm run format -ws"
+    "format": "npm run format -ws",
+    "format:check": "npm run format:check -ws --if-present",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,jsx,json,md,css,scss,html,yml,yaml}": [
+      "npm run lint -ws",
+      "npm run format -ws"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7"
   }
 }
