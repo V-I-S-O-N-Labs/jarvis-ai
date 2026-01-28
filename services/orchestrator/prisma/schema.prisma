@@ -18,7 +18,7 @@ model Agent {
   id        String        @id @default(uuid())
   name      String
   status    AgentStatus   @default(CREATED)
-  scopes    String[]
+  scopes    AgentScope[]
   policy    Json?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -29,11 +29,29 @@ model Agent {
 model PermissionGrant {
   id        String   @id @default(uuid())
   agentId   String
-  scopes    String[]
+  scopes    PermissionGrantScope[]
   action    String
   reason    String?
   createdAt DateTime @default(now())
   agent     Agent    @relation(fields: [agentId], references: [id])
+}
+
+model AgentScope {
+  id      String @id @default(uuid())
+  agentId String
+  scope   String
+  agent   Agent  @relation(fields: [agentId], references: [id])
+
+  @@unique([agentId, scope])
+}
+
+model PermissionGrantScope {
+  id      String          @id @default(uuid())
+  grantId String
+  scope   String
+  grant   PermissionGrant @relation(fields: [grantId], references: [id])
+
+  @@unique([grantId, scope])
 }
 
 model AuditLog {
